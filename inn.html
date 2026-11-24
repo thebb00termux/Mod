@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Data Injector & Overlay</title>
+    <style>
+        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; padding: 20px; margin: 0; }
+        #status { font-weight: bold; margin-bottom: 10px; color: #ffff00; }
+        .control-group { margin: 15px 0; border: 1px solid #333; padding: 15px; background: #0f0f0f; }
+        input { background: #000; color: #00ff00; border: 1px solid #00ff00; padding: 8px; width: 220px; font-size: 14px; }
+        button { background: #004400; color: #00ff00; border: 1px solid #00ff00; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        button:hover { background: #006600; }
+        #log { margin-top: 20px; height: 150px; overflow-y: scroll; border-top: 1px solid #333; padding-top: 10px; font-size: 12px; color: #cccccc; }
+        
+        /* Nút nổi trên màn hình (Floating Overlay) */
+        #floatingOverlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 9999;
+            display: none; /* Ẩn mặc định */
+            text-align: center;
+            box-shadow: 0 0 15px #00ff00;
+            pointer-events: auto;
+        }
+        #floatingOverlay h3 { margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; }
+        #floatingOverlay .game-name { color: #fff; font-weight: bold; margin-bottom: 10px; display: block; }
+        #floatingOverlay input { width: 100px; text-align: center; margin-bottom: 10px; }
+        #floatingOverlay button { width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>Game Data Injector (No Root)</h2>
+    <div id="status">Trạng thái: Chưa kết nối</div>
+    
+    <div class="control-group">
+        <label>Dữ liệu Game (Package/Data Path):</label>
+        <input type="text" id="targetData" value="com.game.example/data" placeholder="Nhập tên game/data">
+        <button onclick="connectGame()">Kết Nối & Quét</button>
+    </div>
+
+    <div class="control-group">
+        <label>Giá trị hiện tại:</label>
+        <input type="text" id="currentValue" placeholder="0.0" readonly>
+        <br><br>
+        <label>Giá trị mới:</label>
+        <input type="text" id="newValue" placeholder="999999">
+        <button onclick="writeValue()">Viết Giá Trị</button>
+    </div>
+
+    <!-- Nút nổi hiển thị trên app khác -->
+    <div id="floatingOverlay">
+        <h3>Game Data Editor</h3>
+        <span class="game-name" id="overlayGameName">Unknown</span>
+        <input type="text" id="floatInput" placeholder="Giá trị mới">
+        <button onclick="writeValueFromFloat()">Cập Nhật</button>
+        <br><br>
+        <button onclick="toggleOverlay()" style="background:#444; border-color:#fff; color:#fff; font-size:10px;">Ẩn</button>
+    </div>
+
+    <div id="log">Log: Sẵn sàng...<br></div>
+
+    <script>
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function toggleOverlay() {
+            const overlay = document.getElementById('floatingOverlay');
+            overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function connectGame() {
+            const target = document.getElementById('targetData').value;
+            document.getElementById('status').innerText = "Trạng thái: Đang truy cập dữ liệu...";
+            log(`Đang phân tích dữ liệu: ${target}`);
+            
+            // Giả lập quá trình quét bộ nhớ và tìm tên game
+            setTimeout(() => {
+                // Giả sử tên game được giải mã từ đường dẫn dữ liệu
+                const gameName = target.split("/")[0].split(".")[2].toUpperCase() || "UNKNOWN_GAME";
+                
+                document.getElementById('status').innerText = `Trạng thái: Đã kết nối thành công!`;
+                document.getElementById('overlayGameName').innerText = `Target: ${gameName}`;
+                
+                log(`Đã xác định game: ${gameName}`);
+                log(`Đã tìm thấy vùng nhớ chính: 0x${Math.floor(Math.random()*99999999).toString(16).toUpperCase()}`);
+                log(`Giá trị gốc đọc được: 5000.00`);
+                
+                document.getElementById('currentValue').value = "5000.00";
+                
+                // Hiện nút nổi
+                document.getElementById('floatingOverlay').style.display = 'block';
+                log("Nút điều khiển nổi đã được kích hoạt và hiện trên màn hình.");
+            }, 1200);
+        }
+
+        function writeValue() {
+            const newVal = document.getElementById('newValue').value;
+            if (!newVal) return alert("Nhập giá trị mới!");
+            performWrite(newVal);
+        }
+
+        function writeValueFromFloat() {
+            const newVal = document.getElementById('floatInput').value;
+            if (!newVal) return alert("Nhập giá trị mới!");
+            performWrite(newVal);
+        }
+
+        function performWrite(newVal) {
+            log(`Đang ghi giá trị ${newVal} vào bộ nhớ game...`);
+            document.getElementById('status').innerText = "Trạng thái: Đang ghi...";
+            
+            setTimeout(() => {
+                document.getElementById('currentValue').value = newVal;
+                document.getElementById('status').innerText = "Trạng thái: Đã cập nhật.";
+                log(`Thành công! Giá trị trong game đã đổi thành ${newVal}.`);
+                // Reset input
+                document.getElementById('newValue').value = "";
+                document.getElementById('floatInput').value = "";
+            }, 600);
+        }
+    </script>
+</body>
+</html>
